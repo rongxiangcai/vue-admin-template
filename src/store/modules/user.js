@@ -16,7 +16,7 @@ const fucMenuList = (menuArr, arr, level, prefixPath) => {
           children: []
         }
         arr.push(menu)
-        fucMenuList(item.children, menu.children, level + 1, 'views' + item.path)
+        fucMenuList(item.children, menu.children, level + 1, item.path)
       } else {
         const menu = {
           path: path,
@@ -46,8 +46,8 @@ const fucMenuList = (menuArr, arr, level, prefixPath) => {
       } else {
         const menu = {
           path: path,
+          component: () => import(`@/views${prefixPath}/${item.path}`),
           // component: () => import('@/views/systemSetting/' + item.path),
-          component: () => import('@/views/systemSetting/' + item.path),
           meta: { title: item.name }
         }
         console.log(menu)
