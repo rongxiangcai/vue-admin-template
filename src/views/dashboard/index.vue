@@ -15,6 +15,9 @@ export default {
       'name',
       'roles'
     ])
+  },
+  mounted() {
+    console.log(this.$router)
   }
 }
 </script>

@@ -1,6 +1,61 @@
-import { login, logout, getInfo } from '@/api/user'
+import { login, logout, getInfo } from '@/api/api'
 import { getToken, setToken, removeToken } from '@/utils/auth'
 import { resetRouter } from '@/router'
+import Layout from '@/layout'
+
+const fucMenuList = (menuArr, arr, level, prefixPath) => {
+  for (const item of menuArr) {
+    if (level === 1) {
+      const path = item.path
+      if (item.children && item.children.length > 1) {
+        const menu = {
+          path: path,
+          component: Layout,
+          redirect: path + '/' + item.children[0].path,
+          meta: { title: item.name, icon: 'form' },
+          children: []
+        }
+        arr.push(menu)
+        fucMenuList(item.children, menu.children, level + 1, 'views' + item.path)
+      } else {
+        const menu = {
+          path: path,
+          component: Layout,
+          children: [
+            {
+              path: 'index',
+              component: () => import(`@/views${item.path}/index`),
+              meta: { title: item.name, icon: 'form' }
+            }
+          ]
+        }
+        arr.push(menu)
+      }
+    } else {
+      const path = item.path
+      if (item.children && item.children.length > 1) {
+        const menu = {
+          path: path,
+          component: () => import(`${prefixPath}/${item.path}`),
+          meta: { title: item.name },
+          children: []
+        }
+        console.log(`${prefixPath}/${item.path}`)
+        arr.push(menu)
+        fucMenuList(item.children, menu.children, level + 1, `${prefixPath}/${item.path}`)
+      } else {
+        const menu = {
+          path: path,
+          // component: () => import('@/views/systemSetting/' + item.path),
+          component: () => import('@/views/systemSetting/' + item.path),
+          meta: { title: item.name }
+        }
+        console.log(menu)
+        arr.push(menu)
+      }
+    }
+  }
+}
 
 const state = {
   token: getToken(),
@@ -27,12 +82,11 @@ const mutations = {
 const actions = {
   // user login
   login({ commit }, userInfo) {
-    const { username, password } = userInfo
     return new Promise((resolve, reject) => {
-      login({ username: username.trim(), password: password }).then(response => {
+      login(userInfo).then(response => {
         const { data } = response
-        commit('SET_TOKEN', data.token)
-        setToken(data.token)
+        commit('SET_TOKEN', data.SSO_TOKEN)
+        setToken(data.SSO_TOKEN)
         resolve()
       }).catch(error => {
         reject(error)
@@ -50,8 +104,10 @@ const actions = {
           reject('Verification failed, please Login again.')
         }
 
-        const { roles, name, avatar } = data
-
+        const { name, avatar } = data
+        const roles = []
+        fucMenuList(data.menuList, roles, 1, '')
+        console.log('roles', roles)
         // roles must be a non-empty array
         if (!roles || roles.length <= 0) {
           reject('getInfo: roles must be a non-null array!')
@@ -60,7 +116,7 @@ const actions = {
         commit('SET_ROLES', roles)
         commit('SET_NAME', name)
         commit('SET_AVATAR', avatar)
-        resolve(data)
+        resolve(roles)
       }).catch(error => {
         reject(error)
       })

@@ -1,11 +1,11 @@
 import axios from 'axios'
-import { Message } from 'element-ui'
+import { Message, MessageBox } from 'element-ui'
 import store from '../store'
 
 // 创建axios实例
 const service = axios.create({
-  baseURL: process.env.VUE_APP_BASE_API, // api的base_url
-  timeout: 15000, // 请求超时时间
+  baseURL: process.env.BASE_API, // api的base_url
+  timeout: 1800000, // 请求超时时间
   headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'Accept': 'application/json' }
 })
 
@@ -37,18 +37,16 @@ service.interceptors.response.use(
       })
 
       // 50008:非法的token; 50012:其他客户端登录了;  50014:Token 过期了;
-      if (res.code === 5 || res.code === 1 || res.code === 106 || res.code === 104 || res.code === 105) {
-        if (res.code === 104 || res.code === 105) {
-          setTimeout(() => {
-            store.dispatch('FedLogOut').then(() => {
-              location.reload()// 为了重新实例化vue-router对象 避免bug
-            })
-          }, 500)
-        } else {
+      if (res.code === 5) {
+        MessageBox.confirm('你已被登出，可以取消继续留在该页面，或者重新登录', '确定登出', {
+          confirmButtonText: '重新登录',
+          cancelButtonText: '取消',
+          type: 'warning'
+        }).then(() => {
           store.dispatch('FedLogOut').then(() => {
             location.reload()// 为了重新实例化vue-router对象 避免bug
           })
-        }
+        })
       } else {
         console.log('error', response)
       }

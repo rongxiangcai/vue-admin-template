@@ -30,7 +30,7 @@ export function filterAsyncRoutes(routes, roles) {
       res.push(tmp)
     }
   })
-  console.log('res', res)
+
   return res
 }
 
@@ -49,17 +49,14 @@ const mutations = {
 const actions = {
   generateRoutes({ commit }, roles) {
     return new Promise(resolve => {
-      // let accessedRoutes
-      // if (roles.includes('admin')) {
-      //   accessedRoutes = asyncRoutes || []
-      // } else {
-      //   accessedRoutes = filterAsyncRoutes(asyncRoutes, roles)
-      // }
-      // commit('SET_ROUTES', accessedRoutes)
-      // resolve(accessedRoutes)
-
-      commit('SET_ROUTES', roles)
-      resolve(roles)
+      let accessedRoutes
+      if (roles.includes('admin')) {
+        accessedRoutes = asyncRoutes || []
+      } else {
+        accessedRoutes = filterAsyncRoutes(asyncRoutes, roles)
+      }
+      commit('SET_ROUTES', accessedRoutes)
+      resolve(accessedRoutes)
     })
   }
 }
