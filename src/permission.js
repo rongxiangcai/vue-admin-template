@@ -5,7 +5,6 @@ import NProgress from 'nprogress' // progress bar
 import 'nprogress/nprogress.css' // progress bar style
 import { getToken } from '@/utils/auth' // get token from cookie
 import getPageTitle from '@/utils/get-page-title'
-import Layout from '@/layout'
 
 NProgress.configure({ showSpinner: false }) // NProgress Configuration
 
@@ -18,8 +17,9 @@ router.beforeEach(async(to, from, next) => {
   // set page title
   document.title = getPageTitle(to.meta.title)
   // console.log(router)
-  // next()
-  // return
+  store.commit('permission/SET_ROUTES', [])
+  next()
+  return
   // determine whether the user has logged in
   const hasToken = getToken()
 
@@ -39,97 +39,7 @@ router.beforeEach(async(to, from, next) => {
           // note: roles must be a object array! such as: ['admin'] or ,['developer','editor']
           const roles = await store.dispatch('user/getInfo')
 
-          // generate accessible routes map based on roles
-          // const accessRoutes = await store.dispatch('permission/generateRoutes', roles)
-          const rolesTemp = [
-            {
-              path: '/view1',
-              component: Layout,
-              children: [
-                {
-                  path: 'view1',
-                  name: 'view1',
-                  component: () => import('@/views/view1/view1'),
-                  meta: { title: 'view1', icon: 'form' }
-                }
-              ]
-            }
-          ]
-
-          const asyncRoutes = [
-            {
-              path: '/nested',
-              component: Layout,
-              redirect: '/nested/menu1',
-              name: 'Nested',
-              meta: {
-                title: 'Nested',
-                icon: 'nested'
-              },
-              children: [
-                {
-                  path: 'menu1',
-                  component: () => import('@/views/nested/menu1/index'), // Parent router-view
-                  name: 'Menu1',
-                  meta: { title: 'Menu1' },
-                  children: [
-                    {
-                      path: 'menu1-1',
-                      component: () => import('@/views/nested/menu1/menu1-1'),
-                      name: 'Menu1-1',
-                      meta: { title: 'Menu1-1' }
-                    },
-                    {
-                      path: 'menu1-2',
-                      component: () => import('@/views/nested/menu1/menu1-2'),
-                      name: 'Menu1-2',
-                      meta: { title: 'Menu1-2' },
-                      children: [
-                        {
-                          path: 'menu1-2-1',
-                          component: () => import('@/views/nested/menu1/menu1-2/menu1-2-1'),
-                          name: 'Menu1-2-1',
-                          meta: { title: 'Menu1-2-1' }
-                        },
-                        {
-                          path: 'menu1-2-2',
-                          component: () => import('@/views/nested/menu1/menu1-2/menu1-2-2'),
-                          name: 'Menu1-2-2',
-                          meta: { title: 'Menu1-2-2' }
-                        }
-                      ]
-                    },
-                    {
-                      path: 'menu1-3',
-                      component: () => import('@/views/nested/menu1/menu1-3'),
-                      name: 'Menu1-3',
-                      meta: { title: 'Menu1-3' }
-                    }
-                  ]
-                },
-                {
-                  path: 'menu2',
-                  component: () => import('@/views/nested/menu2/index'),
-                  meta: { title: 'menu2' }
-                }
-              ]
-            },
-
-            {
-              path: 'external-link',
-              component: Layout,
-              children: [
-                {
-                  path: 'https://panjiachen.github.io/vue-element-admin-site/#/',
-                  meta: { title: 'External Link', icon: 'link' }
-                }
-              ]
-            },
-
-            // 404 page must be placed at the end !!!
-            { path: '*', redirect: '/404', hidden: true }
-          ]
-
+          // 动态路由
           const accessRoutes = await store.dispatch('permission/generateRoutes', roles)
           router.addRoutes(accessRoutes)
 

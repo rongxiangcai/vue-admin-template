@@ -36,7 +36,7 @@ const fucMenuList = (menuArr, arr, level, prefixPath) => {
       if (item.children && item.children.length > 1) {
         const menu = {
           path: path,
-          component: () => import(`${prefixPath}/${item.path}`),
+          component: () => import(`@/views${prefixPath}/${item.path}`),
           meta: { title: item.name },
           children: []
         }
@@ -47,7 +47,6 @@ const fucMenuList = (menuArr, arr, level, prefixPath) => {
         const menu = {
           path: path,
           component: () => import(`@/views${prefixPath}/${item.path}`),
-          // component: () => import('@/views/systemSetting/' + item.path),
           meta: { title: item.name }
         }
         console.log(menu)
@@ -126,15 +125,11 @@ const actions = {
   // user logout
   logout({ commit, state }) {
     return new Promise((resolve, reject) => {
-      logout(state.token).then(() => {
-        commit('SET_TOKEN', '')
-        commit('SET_ROLES', [])
-        removeToken()
-        resetRouter()
-        resolve()
-      }).catch(error => {
-        reject(error)
-      })
+      commit('SET_TOKEN', '')
+      commit('SET_ROLES', [])
+      removeToken()
+      resetRouter()
+      resolve()
     })
   },
 
