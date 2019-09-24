@@ -3,7 +3,7 @@
     <div class="top-bar-container">
       <el-button class="top-bar-add" type="primary" size="small" @click="addData">新增</el-button>
       <div>
-        <el-input v-model="searchText" class="top-bar-input-name" placeholder="名称" size="mini" />
+        <el-input v-model="searchText" class="top-bar-input-name" clearable placeholder="名称" size="mini" />
         <el-button class="top-bar-button-search" type="primary" size="small" @click="selectData">查询</el-button>
       </div>
     </div>

@@ -1,94 +1,97 @@
 <template>
-    <div style="padding: 20px">
-      <el-table class="table" :data="tableData" border>
-        <el-table-column label="企业账号" align="center">
-          <template slot-scope="scope">
-            <span style="margin-left: 10px">{{ scope.row.account }}</span>
-          </template>
-        </el-table-column>
-        <el-table-column label="企业名称" align="center">
-          <template slot-scope="scope">
-            <span style="margin-left: 10px">{{ scope.row.name }}</span>
-          </template>
-        </el-table-column>
-        <el-table-column label="座机" align="center">
-          <template slot-scope="scope">
-            <span style="margin-left: 10px">{{ scope.row.telephone }}</span>
-          </template>
-        </el-table-column>
-        <el-table-column label="传真" align="center">
-          <template slot-scope="scope">
-            <span style="margin-left: 10px">{{ scope.row.fax }}</span>
-          </template>
-        </el-table-column>
-        <el-table-column label="描述" align="center">
-          <template slot-scope="scope">
-            <span style="margin-left: 10px">{{ scope.row.description }}</span>
-          </template>
-        </el-table-column>
-        <el-table-column
-          label="企业logo"
-          align="center"
-          width="180">
-          <template slot-scope="scope">
-            <div style="width: 100%;height: 100%;display: flex;justify-content: center;align-items: center">
-              <div :style="getImageStyle(scope.row.logo)"></div>
-              <span @click="updateLogo(scope.$index, scope.row)" style="margin-left: 10px">修改</span>
-            </div>
-          </template>
-        </el-table-column>
-        <el-table-column align="center" min-width="180" label="操作">
-          <template slot-scope="scope">
-            <div style="display: flex;justify-content: center">
-              <el-button
-                size="mini"
-                @click="handleEdit(scope.$index, scope.row)">编辑</el-button>
-            </div>
-          </template>
-        </el-table-column>
-      </el-table>
-      <el-dialog title="修改企业信息" :visible.sync="dialogTableVisible" :modal-append-to-body="false" width="70%" @close="closeDialog">
-        <el-form :model="addFormData" :rules="rules" ref="addForm" label-width="100px" v-loading="loading">
-          <el-form-item label="企业名称" prop="name">
-            <el-input v-model="addFormData.name" style="margin: 0px"></el-input>
-          </el-form-item>
-          <el-form-item label="座机" prop="">
-            <el-input v-model="addFormData.telephone" style="margin: 0px"></el-input>
-          </el-form-item>
-          <el-form-item label="传真" prop="">
-            <el-input v-model="addFormData.fax" style="margin: 0px"></el-input>
-          </el-form-item>
-          <el-form-item label="描述" prop="">
-            <el-input v-model="addFormData.description" style="margin: 0px"></el-input>
-          </el-form-item>
-        </el-form>
-        <span slot="footer" class="dialog-footer">
+  <div style="padding: 20px">
+    <el-table class="table" :data="tableData" border>
+      <el-table-column label="企业账号" align="center">
+        <template slot-scope="scope">
+          <span style="margin-left: 10px">{{ scope.row.account }}</span>
+        </template>
+      </el-table-column>
+      <el-table-column label="企业名称" align="center">
+        <template slot-scope="scope">
+          <span style="margin-left: 10px">{{ scope.row.name }}</span>
+        </template>
+      </el-table-column>
+      <el-table-column label="座机" align="center">
+        <template slot-scope="scope">
+          <span style="margin-left: 10px">{{ scope.row.telephone }}</span>
+        </template>
+      </el-table-column>
+      <el-table-column label="传真" align="center">
+        <template slot-scope="scope">
+          <span style="margin-left: 10px">{{ scope.row.fax }}</span>
+        </template>
+      </el-table-column>
+      <el-table-column label="描述" align="center">
+        <template slot-scope="scope">
+          <span style="margin-left: 10px">{{ scope.row.description }}</span>
+        </template>
+      </el-table-column>
+      <el-table-column
+        label="企业logo"
+        align="center"
+        width="180"
+      >
+        <template slot-scope="scope">
+          <div style="width: 100%;height: 100%;display: flex;justify-content: center;align-items: center">
+            <div :style="getImageStyle(scope.row.logo)" />
+            <el-button size="small" style="margin-left: 10px" @click="updateLogo(scope.$index, scope.row)">修改</el-button>
+          </div>
+        </template>
+      </el-table-column>
+      <el-table-column align="center" min-width="180" label="操作">
+        <template slot-scope="scope">
+          <div style="display: flex;justify-content: center">
+            <el-button
+              size="small"
+              @click="handleEdit(scope.$index, scope.row)"
+            >编辑</el-button>
+          </div>
+        </template>
+      </el-table-column>
+    </el-table>
+    <el-dialog title="修改企业信息" :visible.sync="dialogTableVisible" :modal-append-to-body="false" width="70%" @close="closeDialog">
+      <el-form ref="addForm" v-loading="loading" :model="addFormData" :rules="rules" label-width="100px">
+        <el-form-item label="企业名称" prop="name">
+          <el-input v-model="addFormData.name" style="margin: 0px" />
+        </el-form-item>
+        <el-form-item label="座机" prop="">
+          <el-input v-model="addFormData.telephone" style="margin: 0px" />
+        </el-form-item>
+        <el-form-item label="传真" prop="">
+          <el-input v-model="addFormData.fax" style="margin: 0px" />
+        </el-form-item>
+        <el-form-item label="描述" prop="">
+          <el-input v-model="addFormData.description" style="margin: 0px" />
+        </el-form-item>
+      </el-form>
+      <span slot="footer" class="dialog-footer">
         <el-button @click="cancelDialog">取 消</el-button>
-        <el-button type="primary" @click="onSubmit" :loading="loading">确 定</el-button>
+        <el-button type="primary" :loading="loading" @click="onSubmit">确 定</el-button>
       </span>
-      </el-dialog>
-      <el-dialog title="修改企业logo" :visible.sync="dialogLogo" :modal-append-to-body="false" width="70%" @close="closeDialogLogo">
-        <el-form :model="logoData" :rules="rules" ref="logoDialog" label-width="100px" v-loading="loading">
-          <el-form-item label="logo" prop="cover">
-            <el-upload
-              class="avatar-uploader"
-              ref="upload"
-              :action="hosturl"
-              :data="pdata"
-              :show-file-list="false"
-              :on-success="handleAvatarSuccess"
-              :before-upload="beforeAvatarUpload">
-              <img v-if="imageUrl" :src="imageUrl" class="avatar">
-              <i v-else class="el-icon-plus avatar-uploader-icon"></i>
-            </el-upload>
-          </el-form-item>
-        </el-form>
-        <span slot="footer" class="dialog-footer">
+    </el-dialog>
+    <el-dialog title="修改企业logo" :visible.sync="dialogLogo" :modal-append-to-body="false" width="70%" @close="closeDialogLogo">
+      <el-form ref="logoDialog" v-loading="loading" :model="logoData" :rules="rules" label-width="100px">
+        <el-form-item label="logo" prop="cover">
+          <el-upload
+            ref="upload"
+            class="avatar-uploader"
+            :action="hosturl"
+            :data="pdata"
+            :show-file-list="false"
+            :on-success="handleAvatarSuccess"
+            :before-upload="beforeAvatarUpload"
+          >
+            <img v-if="imageUrl" :src="imageUrl" class="avatar">
+            <i v-else class="el-icon-plus avatar-uploader-icon" />
+          </el-upload>
+        </el-form-item>
+      </el-form>
+      <span slot="footer" class="dialog-footer">
         <el-button @click="cancelDialog">取 消</el-button>
-        <el-button type="primary" @click="onSubmitLogo" :loading="loading">确 定</el-button>
+        <el-button type="primary" :loading="loading" @click="onSubmitLogo">确 定</el-button>
       </span>
-      </el-dialog>
-    </div>
+    </el-dialog>
+  </div>
 </template>
 
 <script>

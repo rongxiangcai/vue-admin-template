@@ -1,10 +1,13 @@
 <template>
-  <div>view1</div>
+  <div>
+    <div>test2</div>
+    <router-view />
+  </div>
 </template>
 
 <script>
 export default {
-  name: 'View1'
+  name: 'Test1'
 }
 </script>
 

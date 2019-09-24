@@ -3,34 +3,57 @@
     <div class="top-bar-container">
       <el-button class="top-bar-add" type="primary" size="small" @click="addData">新增</el-button>
       <div>
-        <el-input v-model="searchText" class="top-bar-input-name" placeholder="名称" size="mini" />
+
+<!--        <el-date-picker-->
+<!--          v-model="searchDateArr"-->
+<!--          size="small"-->
+<!--          value-format="timestamp"-->
+<!--          type="datetimerange"-->
+<!--          range-separator="至"-->
+<!--          start-placeholder="开始日期"-->
+<!--          end-placeholder="结束日期"-->
+<!--        />-->
+
+                <el-date-picker
+                  size="small"
+                  value-format="timestamp"
+                  v-model="searchDateArr"
+                  type="daterange"
+                  range-separator="至"
+                  start-placeholder="开始日期"
+                  end-placeholder="结束日期">
+                </el-date-picker>
+        <el-input v-model="searchText" class="top-bar-input-name" clearable placeholder="账号" size="small" />
         <el-button class="top-bar-button-search" type="primary" size="small" @click="selectData">查询</el-button>
       </div>
     </div>
     <el-table class="table" :data="tableData" border @selection-change="handleSelectionChange">
-      <el-table-column type="selection" align="center" width="55" />
+      <!--      <el-table-column type="selection" align="center" width="55" />-->
       <el-table-column label="序号" type="index" align="center" width="60" />
-      <el-table-column label="名称" prop="" align="center" width="180" />
-      <el-table-column label="名称" align="center" width="180">
+      <el-table-column label="账号" prop="operateAccount" align="center" />
+      <el-table-column label="ip" prop="remoteIp" align="center" />
+      <el-table-column label="操作记录" prop="methodName" align="center" />
+      <el-table-column label="操作结果" prop="responseMsg" align="center" />
+      <el-table-column label="操作时间" align="center" width="180">
         <template slot-scope="scope">
-          <span style="margin-left: 10px">{{ scope.row.name }}</span>
+          <span style="margin-left: 10px">{{ datestamp2date(scope.row.createStamp) }}</span>
         </template>
       </el-table-column>
-      <el-table-column align="center" min-width="180" label="操作">
-        <template slot-scope="scope">
-          <div style="display: flex;justify-content: center">
-            <el-button
-              size="mini"
-              @click="handleEdit(scope.$index, scope.row)"
-            >编辑</el-button>
-            <el-button
-              size="mini"
-              type="danger"
-              @click="handleDelete(scope.$index, scope.row)"
-            >删除</el-button>
-          </div>
-        </template>
-      </el-table-column>
+      <!--      <el-table-column align="center" min-width="180" label="操作">-->
+      <!--        <template slot-scope="scope">-->
+      <!--          <div style="display: flex;justify-content: center">-->
+      <!--            <el-button-->
+      <!--              size="mini"-->
+      <!--              @click="handleEdit(scope.$index, scope.row)"-->
+      <!--            >编辑</el-button>-->
+      <!--            <el-button-->
+      <!--              size="mini"-->
+      <!--              type="danger"-->
+      <!--              @click="handleDelete(scope.$index, scope.row)"-->
+      <!--            >删除</el-button>-->
+      <!--          </div>-->
+      <!--        </template>-->
+      <!--      </el-table-column>-->
     </el-table>
     <div class="bottom-bar-container">
       <el-button class="multiple-delete-button" type="primary" size="small" @click="multipleDelete">批量删除</el-button>
@@ -61,11 +84,12 @@
 </template>
 
 <script>
-import { bookAdd, bookDelete, bookUpdate, bookList, getUploadKey } from '@/api/api'
+import { bookAdd, bookDelete, bookUpdate, logPage } from '@/api/api'
 
 export default {
   data() {
     return {
+      searchDateArr: [],
       multipleSelection: [],
       tableData: [{ name: 'rose' }],
       searchText: '',
@@ -89,7 +113,7 @@ export default {
     }
   },
   mounted() {
-    // this.loadData(1)
+    this.loadData(1)
   },
   methods: {
     onSubmit() {
@@ -213,9 +237,13 @@ export default {
       this.loading = true
       const params = { pageNum: pageNum, pageSize: this.pagination.pageSize, mode: false }
       if (this.searchText) {
-        params.name = this.searchText
+        params.accountLike = this.searchText
       }
-      bookList(params).then(res => {
+      if (this.searchDateArr.length > 1) {
+        params.begin = this.searchDateArr[0]
+        params.end = this.searchDateArr[1]
+      }
+      logPage(params).then(res => {
         this.loading = false
         this.tableData = res.data.list
         this.pagination.totalSize = res.data.totalCount
@@ -242,6 +270,7 @@ export default {
   .top-bar-add {
     margin-left: 15px;
     height: 30px;
+    visibility: hidden;
   }
   .top-bar-input-name {
     width: 150px;
@@ -264,7 +293,9 @@ export default {
     margin-top: 10px;
     background: #f1f2f3
   }
-  .multiple-delete-button {}
+  .multiple-delete-button {
+    visibility: hidden;
+  }
   .form-input-common {
     width: 300px;
   }

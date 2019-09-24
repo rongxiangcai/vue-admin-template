@@ -57,7 +57,7 @@ const actions = {
       // }
       // commit('SET_ROUTES', accessedRoutes)
       // resolve(accessedRoutes)
-
+      roles.push({ path: '*', redirect: '/404', hidden: true })
       commit('SET_ROUTES', roles)
       resolve(roles)
     })

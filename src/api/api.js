@@ -94,3 +94,9 @@ export function accountUpdate(params) {
   const url = '/self/username'
   return requestHelper(url, methodPut, params)
 }
+
+// 日志分页
+export function logPage(params) {
+  const url = '/action/log/page'
+  return requestHelper(url, methodPost, params)
+}
