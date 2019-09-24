@@ -31,7 +31,7 @@ export function updateInfo(params) {
 
 // 修改头像
 export function updateAvatar(params) {
-  const url = '/self/avatar'
+  const url = '/self/avatar/set'
   return requestHelper(url, methodPut, params)
 }
 

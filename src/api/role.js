@@ -34,7 +34,7 @@ export function roleEnable(params) {
 
 // 批量获取角色 params(nameLike, mode, pageNum, pageSize, offset)
 export function roleList(params) {
-  const url = '/role/list'
+  const url = '/role/page'
   return requestHelper(url, methodGet, params)
 }
 
@@ -52,24 +52,24 @@ export function permissionSetup(params) {
 
 // 新增账号 params()
 export function userAdd(params) {
-  const url = '/user/add'
+  const url = '/account/add'
   return requestHelper(url, methodPost, params)
 }
 
 // 批量删除账号 params(roleIds)
 export function userDelete(params) {
-  const url = '/user/delete'
+  const url = '/account/delete'
   return requestHelper(url, methodDelete, params)
 }
 
 // 修改账号 params(id)
 export function userUpdate(params) {
-  const url = '/user/update'
+  const url = '/account/update'
   return requestHelper(url, methodPut, params)
 }
 
 // 批量获取账号 params(nameLike, mode, pageNum, pageSize, offset)
 export function userList(params) {
-  const url = '/user/list'
+  const url = '/account/page'
   return requestHelper(url, methodGet, params)
 }

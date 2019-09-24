@@ -15,7 +15,8 @@ const name = defaultSettings.title || 'vue Admin Template' // page title
 // port = 9528 npm run dev OR npm run dev --port = 9528
 const port = process.env.port || process.env.npm_config_port || 9528 // dev port
 
-const testTarget = 'http://192.168.0.73:8888/journey'
+// const testTarget = 'http://192.168.0.73:8888/journey'
+const testTarget = 'http://192.168.0.52:8080/zhixinbao-labour'
 
 // All configuration item explanations can be find in https://cli.vuejs.org/config/
 module.exports = {

@@ -12,7 +12,7 @@ const fucMenuList = (menuArr, arr, level, prefixPath) => {
           path: path,
           component: Layout,
           redirect: path + '/' + item.children[0].path,
-          meta: { title: item.name, icon: 'form' },
+          meta: { title: item.name, icon: item.icon },
           children: []
         }
         arr.push(menu)
@@ -25,7 +25,7 @@ const fucMenuList = (menuArr, arr, level, prefixPath) => {
             {
               path: 'index',
               component: () => import(`@/views${item.path}/index`),
-              meta: { title: item.name, icon: 'form' }
+              meta: { title: item.name, icon: item.icon }
             }
           ]
         }
@@ -60,7 +60,8 @@ const state = {
   token: getToken(),
   name: '',
   avatar: '',
-  roles: []
+  roles: [],
+  userInfo: {}
 }
 
 const mutations = {
@@ -75,6 +76,9 @@ const mutations = {
   },
   SET_ROLES: (state, roles) => {
     state.roles = roles
+  },
+  SET_USERINFO: (state, userInfo) => {
+    state.userInfo = userInfo
   }
 }
 
@@ -84,8 +88,8 @@ const actions = {
     return new Promise((resolve, reject) => {
       login(userInfo).then(response => {
         const { data } = response
-        commit('SET_TOKEN', data.SSO_TOKEN)
-        setToken(data.SSO_TOKEN)
+        commit('SET_TOKEN', data.TOKEN)
+        setToken(data.TOKEN)
         resolve()
       }).catch(error => {
         reject(error)
@@ -94,7 +98,7 @@ const actions = {
   },
 
   // get user info
-  getInfo({ commit, state }) {
+  getInfo({ dispatch, commit, state }) {
     return new Promise((resolve, reject) => {
       getInfo(state.token).then(response => {
         const { data } = response
@@ -103,7 +107,7 @@ const actions = {
           reject('Verification failed, please Login again.')
         }
 
-        const { name, avatar } = data
+        const { name, avatar, logo } = data
         const roles = []
         fucMenuList(data.menuList, roles, 1, '')
         console.log('roles', roles)
@@ -115,6 +119,8 @@ const actions = {
         commit('SET_ROLES', roles)
         commit('SET_NAME', name)
         commit('SET_AVATAR', avatar)
+        commit('SET_USERINFO', data)
+        dispatch('app/updateLogo', logo, { root: true })
         resolve(roles)
       }).catch(error => {
         reject(error)

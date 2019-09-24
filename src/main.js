@@ -4,7 +4,7 @@ import 'normalize.css/normalize.css' // A modern alternative to CSS resets
 
 import ElementUI from 'element-ui'
 import 'element-ui/lib/theme-chalk/index.css'
-import locale from 'element-ui/lib/locale/lang/en' // lang i18n
+// import locale from 'element-ui/lib/locale/lang/en' // lang i18n
 
 import '@/styles/index.scss' // global css
 
@@ -14,6 +14,8 @@ import router from './router'
 
 import '@/icons' // icon
 import '@/permission' // permission control
+
+import { timestampToTimeStr } from '@/utils/dateFormat'
 
 /**
  * If you don't want to use mock-server
@@ -29,9 +31,19 @@ if (process.env.NODE_ENV === 'production') {
 }
 
 // set ElementUI lang to EN
-Vue.use(ElementUI, { locale })
+// Vue.use(ElementUI, { locale })
+Vue.use(ElementUI)
 
 Vue.config.productionTip = false
+
+// 时间
+Vue.prototype.datestamp2date = function(stamp) {
+  if (stamp) {
+    return timestampToTimeStr(stamp)
+  } else {
+    return ''
+  }
+}
 
 new Vue({
   el: '#app',

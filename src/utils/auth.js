@@ -1,6 +1,6 @@
 import Cookies from 'js-cookie'
 
-const TokenKey = 'SSO_TOKEN'
+const TokenKey = 'LAB_TOKEN'
 
 export function getToken() {
   return Cookies.get(TokenKey)

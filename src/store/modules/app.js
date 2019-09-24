@@ -25,6 +25,11 @@ const mutations = {
   },
   TOGGLE_DEVICE: (state, device) => {
     state.device = device
+  },
+  UPDATE_LOGO: (state, logo) => {
+    const sidebar = { ...state.sidebar }
+    sidebar.logo = logo
+    state.sidebar = sidebar
   }
 }
 
@@ -37,6 +42,9 @@ const actions = {
   },
   toggleDevice({ commit }, device) {
     commit('TOGGLE_DEVICE', device)
+  },
+  updateLogo: ({ commit }, logo) => {
+    commit('UPDATE_LOGO', logo)
   }
 }
 

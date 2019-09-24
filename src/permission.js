@@ -17,9 +17,9 @@ router.beforeEach(async(to, from, next) => {
   // set page title
   document.title = getPageTitle(to.meta.title)
   // console.log(router)
-  store.commit('permission/SET_ROUTES', [])
-  next()
-  return
+  // store.commit('permission/SET_ROUTES', [])
+  // next()
+  // return
   // determine whether the user has logged in
   const hasToken = getToken()
 

@@ -54,7 +54,18 @@ export const constantRoutes = [
       meta: { title: 'Dashboard', icon: 'dashboard' }
     }]
   },
-
+  {
+    path: '/personalCenter',
+    component: Layout,
+    name: 'personalCenter',
+    redirect: '/personalCenter/personal',
+    hidden: true,
+    meta: { title: '个人信息', icon: 'xxx' },
+    children: [{
+      path: 'personal',
+      component: () => import('@/views/personalCenter/index')
+    }]
+  },
   {
     path: '/example',
     component: Layout,
@@ -88,7 +99,88 @@ export const constantRoutes = [
         meta: { title: 'Form', icon: 'form' }
       }
     ]
-  }
+  },
+  {
+    path: '/nested',
+    component: Layout,
+    redirect: '/nested/menu1',
+    name: 'Nested',
+    meta: {
+      title: 'Nested',
+      icon: 'nested'
+    },
+    children: [
+      {
+        path: 'menu1',
+        component: () => import('@/views/nested/menu1/index'), // Parent router-view
+        name: 'Menu1',
+        meta: { title: 'Menu1' },
+        children: [
+          {
+            path: 'menu1-1',
+            component: () => import('@/views/nested/menu1/menu1-1'),
+            name: 'Menu1-1',
+            meta: { title: 'Menu1-1' }
+          },
+          {
+            path: 'menu1-2',
+            component: () => import('@/views/nested/menu1/menu1-2'),
+            name: 'Menu1-2',
+            meta: { title: 'Menu1-2' },
+            children: [
+              {
+                path: 'menu1-2-1',
+                component: () => import('@/views/nested/menu1/menu1-2/menu1-2-1'),
+                name: 'Menu1-2-1',
+                meta: { title: 'Menu1-2-1' }
+              }
+            ]
+          },
+          {
+            path: 'menu1-3',
+            component: () => import('@/views/nested/menu1/menu1-3'),
+            name: 'Menu1-3',
+            meta: { title: 'Menu1-3' }
+          }
+        ]
+      },
+      {
+        path: 'menu2',
+        component: () => import('@/views/nested/menu2/index'),
+        meta: { title: 'menu2' }
+      }
+    ]
+  },
+  // {
+  //   path: '/systemSetting',
+  //   component: Layout,
+  //   redirect: '/systemSetting/accountSetting',
+  //   name: '系统设置',
+  //   meta: {
+  //     title: '系统设置',
+  //     icon: 'systemSetting'
+  //   },
+  //   children: [
+  //     {
+  //       path: 'accountSetting',
+  //       component: () => import('@/views/systemSetting/accountSetting'),
+  //       name: '账号设置',
+  //       meta: { title: '账号设置' }
+  //     },
+  //     {
+  //       path: 'permissionSetting',
+  //       component: () => import('@/views/systemSetting/permissionSetting'),
+  //       name: '权限设置',
+  //       meta: { title: '权限设置' }
+  //     },
+  //     {
+  //       path: 'enterpriseInfo',
+  //       component: () => import('@/views/systemSetting/enterpriseInfo'),
+  //       name: '企业信息',
+  //       meta: { title: '企业信息' }
+  //     }
+  //   ]
+  // }
 ]
 
 /**
