@@ -321,34 +321,19 @@ export default {
           this.treeData = res.data
           this.treeCheck = []
           // 设置默认选中效果
-          for (let i = 0; i < this.treeData.length; i++) {
-            if (this.treeData[i].children != null) {
-              // 一级子元素循环
-              const firChil = this.treeData[i].children
-              let firstTag = true
-              for (let j = 0; j < firChil.length; j++) {
-                if (firChil[j].selected == true) {
-                  this.treeCheck.push(firChil[j].id)
-                } else {
-                  firstTag = false
+          const fucRemoveParentId = (tree) => {
+            for (let i = 0; i < tree.length; i++) {
+              const item = tree[i]
+              if (!item.children || item.children.length === 0) {
+                if (item.selected) {
+                  this.treeCheck.push(item.id)
                 }
-                // 二级子元素循环
-                const secChil = firChil[j].children
-                if (secChil != null) {
-                  for (let m = 0; m < secChil.length; m++) {
-                    if (secChil[m].selected == true) {
-                      this.treeCheck.push(secChil[m].id)
-                    }
-                  }
-                }
-              }
-              if (firstTag) {
-                if (this.treeData[i].selected === true) {
-                  this.treeCheck.push(res.data[i].id)
-                }
+              } else {
+                fucRemoveParentId(item.children)
               }
             }
           }
+          fucRemoveParentId(this.treeData)
           this.$refs.tree.setCheckedKeys(this.treeCheck)
         })
       } else {
@@ -361,28 +346,38 @@ export default {
     powerSubmit() {
       this.formLoading = true
       console.log(this.treeData)
-      const treeIds = this.$refs.tree.getCheckedKeys()
-      const tree = this.treeData
-      for (let i = 0; i < tree.length; i++) {
-        const child1 = tree[i]
-        const children = child1.children
-        for (let j = 0; j < children.length; j++) {
-          const child2 = children[j]
-          const id = child2.id
-          if (treeIds.indexOf(id) !== -1) {
-            treeIds.push(child1.id)
-            break
+      const treeIds2 = this.$refs.tree.getCheckedKeys()
+      const fucAppendParentId = (tree) => {
+        for (let i = 0; i < tree.length; i++) {
+          const item = tree[i]
+          if (!item.children || item.children.length === 0) {
+            if (treeIds2.indexOf(item.id) !== -1) {
+              if (item.ids) {
+                for (let j = 0; j < item.ids.length; j++) {
+                  const id = item.ids[j]
+                  if (treeIds2.indexOf(id) === -1) {
+                    treeIds2.push(id)
+                  }
+                }
+              }
+              break
+            }
+          } else {
+            for (let j = 0; j < item.children.length; j++) {
+              const newItem = item.children[j]
+              if (item.ids) {
+                const ids = [...item.ids, item.id]
+                newItem.ids = ids
+              } else {
+                newItem.ids = [item.id]
+              }
+            }
+            fucAppendParentId(item.children)
           }
         }
       }
-      var treeId = [... new Set(treeIds)]// 获取选中的树的id
-      // 将数组转化为‘，’分割
-      var treeLen = treeId.length
-      var str = treeId[0]
-      for (var i = 1; i < treeLen; i++) {
-        str += ',' + treeId[i]
-      }
-      const params = { roleId: this.powerId.id, permisIds: str }
+      fucAppendParentId(this.treeData)
+      const params = { roleId: this.powerId.id, permisIds: treeIds2.join() }
       permissionSetup(params).then(res => {
         this.openSucessMessage()
         this.dialogTreeVisible = false

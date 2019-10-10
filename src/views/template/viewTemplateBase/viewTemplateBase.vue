@@ -182,6 +182,10 @@ export default {
         bookDelete(params).then(res => {
           this.loading = false
           this.$message({ type: 'success', message: '删除成功!' })
+          if (index === 0) {
+            const currentPage = this.pagination.currentPage - 1
+            currentPage > 0 ? this.pagination.currentPage = currentPage : this.pagination.currentPage = 1
+          }
           this.loadData(this.pagination.currentPage)
         }).catch(() => {
           this.loading = false
