@@ -1,0 +1,158 @@
+stages:
+  - internal-sonarqube-js
+  - internal-nginx-build
+  - internal-nginx-deploy
+  - gray-nginx-build
+  - gray-nginx-deploy
+  - release-nginx-build
+  - release-nginx-deploy
+
+cache:
+  # 允许job共用缓存(不同分支不同job都适用该cache策略)
+  #key: "$CI_JOB_NAME"
+  # 允许每个分支共用缓存(相同分支使用同一份缓存)
+  key: "$CI_COMMIT_REF_NAME"
+  # 允许每个分支的每个任务共用缓存
+  #key: "$CI_JOB_STAGE-$CI_COMMIT_REF_NAME"
+  paths:
+    - node_modules/
+
+
+variables:
+  IMAGE_PREFIX: "registry-internal.cn-shanghai.aliyuncs.com/nsntc_custom_project/xxx-admin-web"
+  CONTAINER_NAME: "xxx-admin-web"
+  HOST_PORT: "7036"
+
+
+internal_sonar_analyze:
+  stage: internal-sonarqube-js
+  when: manual
+  script:
+    - "sonar-scanner \
+        -Dsonar.projectKey=VUE:$CI_PROJECT_NAME \
+        -Dsonar.projectName=VUE:$CI_PROJECT_NAME \
+        -Dsonar.projectVersion=$CI_PIPELINE_ID \
+        -Dsonar.issuesReport.html.enable=true"
+  tags:
+    - internal-sonarqube-js
+  only:
+    - dev
+
+
+# node:11.9.0-alpine
+internal_nginx_build:
+  stage: internal-nginx-build
+  image: node:10.16.0
+  when: manual
+  script:
+    - npm set registry https://registry.npm.taobao.org
+    - npm install --progress=false
+    - npm run build
+  artifacts:
+    name: html
+    expire_in: 5 mins
+    paths:
+      - dist
+  only:
+    - dev
+  tags:
+    - internal-nginx-build
+
+
+
+# shell
+internal_nginx_deploy:
+  stage: internal-nginx-deploy
+  when: manual
+  script:
+    - if [[ ! $(docker network ls -f "name=custom-bridge" -q) ]]; then docker network create -d bridge custom-bridge; fi
+    - if [[ ! $(docker ps -aq --filter name=redis) ]]; then docker run -d --name redis -p 6379:6379 --network custom-bridge --restart=always --privileged=true -v /usr/local/redis/data:/data redis:4.0.12 redis-server --requirepass "omega" --appendonly yes; fi
+#  - docker login --username=szneosail --password=szns2019SZ registry.cn-shanghai.aliyuncs.com
+
+    - docker build -t $IMAGE_PREFIX:latest .
+
+    - if [ $(docker ps -aq --filter name=$CONTAINER_NAME) ]; then docker rm -f $CONTAINER_NAME; fi
+    - docker run -d -p $HOST_PORT:80 --network custom-bridge --restart=always --name $CONTAINER_NAME $IMAGE_PREFIX:latest
+
+    - if [[ -n $(docker container ls -f "status=exited" -q) ]]; then docker rm $(docker container ls -f "status=exited" -q); fi
+    - if [[ -n $(docker images | grep none | awk '{print $3}') ]]; then docker images | grep none | awk '{print $3 }' | xargs docker rmi; fi
+  only:
+    - dev
+  tags:
+    - internal-nginx-deploy
+
+
+
+
+gray_nginx_build:
+  stage: gray-nginx-build
+  image: node:10.16.0
+  #  when: manual
+  script:
+    - npm set registry https://registry.npm.taobao.org
+    - npm install --progress=false
+    - npm run build
+  artifacts:
+    name: html
+    expire_in: 5 mins
+    paths:
+      - dist
+  only:
+    - gray
+  tags:
+    - gray-nginx-build
+
+
+gray_nginx_deploy:
+  stage: gray-nginx-deploy
+  #  when: manual
+  script:
+    - docker build -t $IMAGE_PREFIX:latest .
+
+    - if [ $(docker ps -aq --filter name=$CONTAINER_NAME) ]; then docker rm -f $CONTAINER_NAME; fi
+    - docker run -d -p $HOST_PORT:80 --network custom-bridge --restart=always --name $CONTAINER_NAME $IMAGE_PREFIX:latest
+
+    - if [[ -n $(docker container ls -f "status=exited" -q) ]]; then docker rm $(docker container ls -f "status=exited" -q); fi
+    - if [[ -n $(docker images | grep none | awk '{print $3}') ]]; then docker images | grep none | awk '{print $3 }' | xargs docker rmi; fi
+  only:
+    - gray
+  tags:
+    - gray-nginx-deploy
+
+
+
+
+release_nginx_build:
+  stage: release-nginx-build
+  image: node:10.16.0
+#  when: manual
+  script:
+    - npm set registry https://registry.npm.taobao.org
+    - npm install --progress=false
+    - npm run build
+  artifacts:
+    name: html
+    expire_in: 5 mins
+    paths:
+      - dist
+  only:
+    - tags
+  tags:
+    - release-nginx-build
+
+
+release_nginx_deploy:
+  stage: release-nginx-deploy
+#  when: manual
+  script:
+    - docker build -t $IMAGE_PREFIX:$CI_COMMIT_TAG .
+
+    - if [ $(docker ps -aq --filter name=$CONTAINER_NAME) ]; then docker rm -f $CONTAINER_NAME; fi
+    - docker run -d -p $HOST_PORT:80 --network custom-bridge --restart=always --name $CONTAINER_NAME $IMAGE_PREFIX:$CI_COMMIT_TAG
+
+    - if [[ -n $(docker container ls -f "status=exited" -q) ]]; then docker rm $(docker container ls -f "status=exited" -q); fi
+    - if [[ -n $(docker images | grep none | awk '{print $3}') ]]; then docker images | grep none | awk '{print $3 }' | xargs docker rmi; fi
+  only:
+    - tags
+  tags:
+    - release-nginx-deploy
