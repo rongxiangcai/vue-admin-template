@@ -3,14 +3,14 @@
     <h2>个人信息</h2>
     <div class="section1">
       <div class="avatar">
-        <img v-if="userInfo.avatar == '1'" alt="" :src="require('@/assets/system/default-avatar1.jpg')">
-        <img v-if="userInfo.avatar == '2'" alt="" :src="require('@/assets/system/default-avatar2.jpg')">
-        <img v-if="userInfo.avatar !== '1' && userInfo.avatar !== '2' && userInfo.avatar" alt="" :src="userInfo.avatar">
-        <img v-if="!userInfo.avatar" :src="require('@/assets/system/avatar_default3.png')" alt="">
+        <img v-if="userInfo.avatarUrl == '1'" alt="" :src="require('@/assets/system/default-avatar1.jpg')">
+        <img v-if="userInfo.avatarUrl == '2'" alt="" :src="require('@/assets/system/default-avatar2.jpg')">
+        <img v-if="userInfo.avatarUrl !== '1' && userInfo.avatarUrl !== '2' && userInfo.avatarUrl" alt="" :src="userInfo.avatarUrl">
+        <img v-if="!userInfo.avatarUrl" :src="require('@/assets/system/avatar_default3.png')" alt="">
         <p><span @click="onVis1">修改头像</span></p>
       </div>
       <div class="intro">
-        <p>登录账号：{{ userInfo.username }}</p>
+        <p>登录账号：{{ userInfo.account }}</p>
         <p>上次登录时间：{{ datestamp2date(userInfo.previousStamp) }}</p>
         <p>上次登录IP：{{ userInfo.previousIp }}</p>
       </div>
@@ -143,8 +143,8 @@
     >
       <div v-loading="dialogLoading" class="savePassword">
         <el-form ref="vis2" :model="userInfo_password" label-width="100px" :rules="ruleForm">
-          <el-form-item label="当前密码：" prop="pwd">
-            <el-input v-model="userInfo_password.pwd" type="password" />
+          <el-form-item label="当前密码：" prop="oldPwd">
+            <el-input v-model="userInfo_password.oldPwd" type="password" />
           </el-form-item>
           <el-form-item label="新密码：" prop="newPwd">
             <el-input v-model="userInfo_password.newPwd" type="password" />
@@ -233,7 +233,7 @@
       <div v-loading="dialogLoading" class="savePassword">
         <el-form ref="vis5" :model="userInfo_user" label-width="100px" :rules="ruleForm4">
           <el-form-item label="当前账号：" prop="userName">
-            {{ userInfo_user.userName }}
+            {{ userInfo_user.account }}
           </el-form-item>
           <el-form-item label="新账号：" prop="newUserName">
             <el-input v-model="userInfo_user.newUserName" />
@@ -259,248 +259,278 @@
 </template>
 
 <script>
-import {
-  getUploadKey,
-  updateAvatar,
-  userPasswordUpdate,
-  msgSend,
-  cellphoneUpdate,
-  accountUpdate,
-  cellphoneValid,
-  getInfo
-} from '@/api/api'
+  import {
+    getUploadKey,
+    updateAvatar,
+    userPasswordUpdate,
+    msgSend,
+    cellphoneUpdate,
+    accountUpdate,
+    cellphoneValid,
+    getInfo
+  } from '@/api/api'
 
-export default {
-  name: 'Persional',
-  data() {
-    var validatePass2 = (rule, value, callback) => {
-      if (value === '') {
-        callback(new Error('请再次输入密码'))
-      } else if (value !== this.userInfo_password.newPwd) {
-        callback(new Error('两次输入密码不一致!'))
-      } else {
-        callback()
+  export default {
+    name: 'Persional',
+    data() {
+      var validatePass2 = (rule, value, callback) => {
+        if (value === '') {
+          callback(new Error('请再次输入密码'))
+        } else if (value !== this.userInfo_password.newPwd) {
+          callback(new Error('两次输入密码不一致!'))
+        } else {
+          callback()
+        }
       }
-    }
-    return {
-      dialogVisible: {
-        vis1: false,
-        vis2: false,
-        vis3: false,
-        vis4: false,
-        vis5: false,
-        vis7: false
-      },
-      key: '',
-      hosturl: '',
-      images: '',
-      pdata: {},
-      userInfo_avatar: { type: '', src: '', tabs: 'one' },
-      userInfo: this.$store.state.user.userInfo,
-      dialogLoading: false,
-      userInfo_password: {
-        pwd: '',
-        newPwd: '',
-        NewPwdR: ''
-      },
-      userInfo_phone: {
-        phone: '',
-        code: '',
-        load: false,
-        step: 0
-      },
-      userInfo_user: {
-        userName: '',
-        newUserName: '',
-        phone: '',
-        code: '',
-        load: false
-      },
-      ruleForm: {
-        pwd: [
-          { required: true, message: '当前密码不能为空', trigger: 'blur' }
-        ],
-        newPwd: [
-          { required: true, message: '新密码不能为空', trigger: 'blur' }
-        ],
-        NewPwdR: [
-          { required: true, message: '重复密码不能为空', trigger: 'blur' },
-          { validator: validatePass2, trigger: 'blur' }
-        ]
-      },
-      ruleForm2: {
-        phone: [
-          { required: true, message: '当前手机号不能为空', trigger: 'blur' },
-          { pattern: /^1[3|4|5|7|8][0-9]\d{8}$/, message: '手机号码格式不正确', trigger: 'blur' }
-        ],
-        code: [
-          { required: true, message: '验证码不能为空', trigger: 'blur' }
-        ]
-      },
-      ruleForm3: {
-        code: [
-          { required: true, message: '验证码不能为空', trigger: 'blur' }
-        ]
-      },
-      ruleForm4: {
-        code: [
-          { required: true, message: '验证码不能为空', trigger: 'blur' }
-        ],
-        newUserName: [
-          { required: true, message: '新账号名不能为空', trigger: 'blur' }
-        ]
-      },
-      code: {
-        sends: 0,
-        fun: null
-      }
-    }
-  },
-  mounted() {
-    this.ifAvatar()
-  },
-  methods: {
-    closeDialog(val) {
-      if (val == 'vis1') {
-        this.userInfo_avatar = { type: '', src: '', tabs: 'one' }
-        this.userInfo_avatar.type = this.$store.state.user.userInfo.avatar
-      } else {
-        this.$refs[val].resetFields()
-        if (this.code.sends !== 0) {
-          this.code.sends = 0
-          clearInterval(this.code.fun)
+      return {
+        dialogVisible: {
+          vis1: false,
+          vis2: false,
+          vis3: false,
+          vis4: false,
+          vis5: false,
+          vis7: false
+        },
+        key: '',
+        hosturl: '',
+        images: '',
+        pdata: {},
+        userInfo_avatar: { type: '', src: '', tabs: 'one' },
+        userInfo: this.$store.state.user.userInfo,
+        dialogLoading: false,
+        userInfo_password: {
+          oldPwd: '',
+          newPwd: '',
+          NewPwdR: ''
+        },
+        userInfo_phone: {
+          phone: '',
+          code: '',
+          load: false,
+          step: 0
+        },
+        userInfo_user: {
+          account: '',
+          newUserName: '',
+          phone: '',
+          code: '',
+          load: false
+        },
+        ruleForm: {
+          oldPwd: [
+            { required: true, message: '当前密码不能为空', trigger: 'blur' }
+          ],
+          newPwd: [
+            { required: true, message: '新密码不能为空', trigger: 'blur' }
+          ],
+          NewPwdR: [
+            { required: true, message: '重复密码不能为空', trigger: 'blur' },
+            { validator: validatePass2, trigger: 'blur' }
+          ]
+        },
+        ruleForm2: {
+          phone: [
+            { required: true, message: '当前手机号不能为空', trigger: 'blur' },
+            { pattern: /^1[3|4|5|7|8][0-9]\d{8}$/, message: '手机号码格式不正确', trigger: 'blur' }
+          ],
+          code: [
+            { required: true, message: '验证码不能为空', trigger: 'blur' }
+          ]
+        },
+        ruleForm3: {
+          code: [
+            { required: true, message: '验证码不能为空', trigger: 'blur' }
+          ]
+        },
+        ruleForm4: {
+          code: [
+            { required: true, message: '验证码不能为空', trigger: 'blur' }
+          ],
+          newUserName: [
+            { required: true, message: '新账号名不能为空', trigger: 'blur' }
+          ]
+        },
+        code: {
+          sends: 0,
+          fun: null
         }
       }
     },
-    getUploadPictureToken() {
-      return getUploadKey().then(res => {
-        const { accessKeyId, policy, signature, key } = res.data
-        const pdata = { OSSAccessKeyId: accessKeyId, policy: policy, signature: signature, key: key }
-        const { OSSAccessKeyId } = pdata
-        this.key = key
-        this.hosturl = res.data.host
-        this.pdata = { OSSAccessKeyId, policy, signature, key: key + Date.parse(new Date()) }
-        return true
-      }).catch(() => {
-        return false
-      })
-    },
-    onVis1() {
+    mounted() {
       this.ifAvatar()
-      this.dialogVisible.vis1 = true
-      this.getUploadPictureToken()
     },
-    onSaveAvatar() {
-      if (this.userInfo_avatar.tabs == 'two') {
-        if (!this.userInfo_avatar.src) {
-          this.$message.error('上传头像不能为空!')
+    methods: {
+      closeDialog(val) {
+        if (val == 'vis1') {
+          this.userInfo_avatar = { type: '', src: '', tabs: 'one' }
+          this.userInfo_avatar.type = this.$store.state.user.userInfo.avatarUrl
+        } else {
+          this.$refs[val].resetFields()
+          if (this.code.sends !== 0) {
+            this.code.sends = 0
+            clearInterval(this.code.fun)
+          }
+        }
+      },
+      getUploadPictureToken() {
+        return getUploadKey().then(res => {
+          const { accessKeyId, policy, signature, key } = res.data
+          const pdata = { OSSAccessKeyId: accessKeyId, policy: policy, signature: signature, key: key }
+          const { OSSAccessKeyId } = pdata
+          this.key = key
+          this.hosturl = res.data.host
+          this.pdata = { OSSAccessKeyId, policy, signature, key: key + Date.parse(new Date()) }
+          return true
+        }).catch(() => {
           return false
+        })
+      },
+      onVis1() {
+        this.ifAvatar()
+        this.dialogVisible.vis1 = true
+        this.getUploadPictureToken()
+      },
+      onSaveAvatar() {
+        if (this.userInfo_avatar.tabs == 'two') {
+          if (!this.userInfo_avatar.src) {
+            this.$message.error('上传头像不能为空!')
+            return false
+          }
+        } else {
+          if (this.userInfo_avatar.type == 1) {
+            this.userInfo_avatar.src = '1'
+          }
+          if (this.userInfo_avatar.type == 2) {
+            this.userInfo_avatar.src = '2'
+          }
         }
-      } else {
-        if (this.userInfo_avatar.type == 1) {
-          this.userInfo_avatar.src = '1'
+        this.dialogLoading = true
+        updateAvatar({
+          avatarUrl: this.userInfo_avatar.src
+        }).then(() => {
+          this.$store.dispatch('user/getInfo')
+          this.$store.state.user.userInfo.avatarUrl = this.userInfo_avatar.src
+          this.userInfo = this.$store.state.user.userInfo
+          this.dialogVisible.vis1 = false
+          this.dialogLoading = false
+        }).catch(() => {
+          this.dialogLoading = false
+        })
+      },
+      onVis1Type(e) {
+        if (e == this.userInfo_avatar.type) {
+          e = ''
         }
-        if (this.userInfo_avatar.type == 2) {
-          this.userInfo_avatar.src = '2'
-        }
-      }
-      this.dialogLoading = true
-      updateAvatar({
-        avatarUrl: this.userInfo_avatar.src
-      }).then(() => {
-        this.$store.dispatch('user/getInfo')
-        // this.$store.state.user.userInfo.avatar = this.userInfo_avatar.src
-        this.userInfo = this.$store.state.user.userInfo
-        this.dialogVisible.vis1 = false
-        this.dialogLoading = false
-      }).catch(() => {
-        this.dialogLoading = false
-      })
-    },
-    onVis1Type(e) {
-      if (e == this.userInfo_avatar.type) {
-        e = ''
-      }
-      this.userInfo_avatar.type = e
-    },
-    handleAvatarSuccess(res, file) {
-      this.userInfo_avatar.src = this.images
-      this.images = ''
-    },
-    beforeAvatarUpload(file) {
-      this.pdata.key = this.key + Date.parse(new Date())
-      this.images = this.hosturl + '/' + this.pdata.key
-      const isJPGorPNG = file.type === 'image/jpeg' || file.type === 'image/png'
-      const isLt2M = file.size / 1024 / 1024 < 5
-      if (!isJPGorPNG) {
-        this.$message.error('上传头像图片只能是 JPG,PNG 格式!')
+        this.userInfo_avatar.type = e
+      },
+      handleAvatarSuccess(res, file) {
+        this.userInfo_avatar.src = this.images
         this.images = ''
-      }
-      if (!isLt2M) {
-        this.$message.error('上传头像图片大小不能超过 5MB!')
-        this.images = ''
-      }
-      return isJPGorPNG && isLt2M
-    },
-    onVis2() {
-      this.dialogVisible.vis2 = true
-    },
-    onSavePassword(formName) {
-      this.$refs[formName].validate((valid) => {
-        if (valid) {
-          this.dialogLoading = true
-          userPasswordUpdate({
-            currentPwd: this.userInfo_password.pwd,
-            newPwd: this.userInfo_password.newPwd
-          }).then(() => {
-            this.$message.success('修改成功！')
-            this.dialogVisible.vis2 = false
-            this.dialogLoading = false
-          }).catch(() => {
-            this.dialogLoading = false
-          })
+      },
+      beforeAvatarUpload(file) {
+        this.pdata.key = this.key + Date.parse(new Date())
+        this.images = this.hosturl + '/' + this.pdata.key
+        const isJPGorPNG = file.type === 'image/jpeg' || file.type === 'image/png'
+        const isLt2M = file.size / 1024 / 1024 < 5
+        if (!isJPGorPNG) {
+          this.$message.error('上传头像图片只能是 JPG,PNG 格式!')
+          this.images = ''
         }
-      })
-    },
-    onVis3() {
-      this.dialogVisible.vis3 = true
-    },
-    // 发送短信
-    sendCode(flag) {
-      if (flag) {
-        const params = {
-          cellphone: this.userInfo_phone.phone,
-          type: 5
+        if (!isLt2M) {
+          this.$message.error('上传头像图片大小不能超过 5MB!')
+          this.images = ''
         }
-        if (this.userInfo_phone.step == 0) {
-          this.userInfo_phone.load = true
-          msgSend(params).then(() => {
-            this.userInfo_phone.load = false
-            this.code.sends = 119
-            this.code.fun = setInterval(() => {
-              if (this.code.sends > 0) {
-                this.code.sends--
-              } else {
-                this.code.sends = 0
-                clearInterval(this.code.fun)
-              }
-            }, 1000)
-          }).catch(() => {
-            this.userInfo_phone.load = false
-            this.$message({
-              message: '发送验证码过于频繁.请稍后再试!',
-              type: 'error'
+        return isJPGorPNG && isLt2M
+      },
+      onVis2() {
+        this.dialogVisible.vis2 = true
+      },
+      onSavePassword(formName) {
+        this.$refs[formName].validate((valid) => {
+          if (valid) {
+            this.dialogLoading = true
+            userPasswordUpdate({
+              oldPwd: this.userInfo_password.oldPwd,
+              newPwd: this.userInfo_password.newPwd
+            }).then(() => {
+              this.$message.success('修改成功！')
+              this.dialogVisible.vis2 = false
+              this.dialogLoading = false
+            }).catch(() => {
+              this.dialogLoading = false
             })
-          })
-        }
-        if (this.userInfo_phone.step == 1) {
-          this.$refs.vis7.validateField('phone', (res) => {
+          }
+        })
+      },
+      onVis3() {
+        this.dialogVisible.vis3 = true
+      },
+      // 发送短信
+      sendCode(flag) {
+        if (flag) {
+          const params = {
+            cellphone: this.userInfo_phone.phone,
+            type: 5
+          }
+          if (this.userInfo_phone.step == 0) {
+            this.userInfo_phone.load = true
+            msgSend(params).then(() => {
+              this.userInfo_phone.load = false
+              this.code.sends = 119
+              this.code.fun = setInterval(() => {
+                if (this.code.sends > 0) {
+                  this.code.sends--
+                } else {
+                  this.code.sends = 0
+                  clearInterval(this.code.fun)
+                }
+              }, 1000)
+            }).catch(() => {
+              this.userInfo_phone.load = false
+              this.$message({
+                message: '发送验证码过于频繁.请稍后再试!',
+                type: 'error'
+              })
+            })
+          }
+          if (this.userInfo_phone.step == 1) {
+            this.$refs.vis7.validateField('phone', (res) => {
+              if (res) {
+                return false
+              } else {
+                params.type = 4
+                this.userInfo_phone.load = true
+                msgSend(params).then(() => {
+                  this.userInfo_phone.load = false
+                  this.code.sends = 119
+                  this.code.fun = setInterval(() => {
+                    if (this.code.sends > 0) {
+                      this.code.sends--
+                    } else {
+                      this.code.sends = 0
+                      clearInterval(this.code.fun)
+                    }
+                  }, 1000)
+                }).catch(() => {
+                  this.userInfo_phone.load = false
+                  this.$message({
+                    message: '发送验证码过于频繁.请稍后再试!',
+                    type: 'error'
+                  })
+                })
+              }
+            })
+          }
+        } else {
+          this.$refs.vis3.validateField('phone', (res) => {
             if (res) {
               return false
             } else {
-              params.type = 4
               this.userInfo_phone.load = true
-              msgSend(params).then(() => {
+              msgSend({
+                cellphone: this.userInfo_phone.phone,
+                type: 5
+              }).then(() => {
                 this.userInfo_phone.load = false
                 this.code.sends = 119
                 this.code.fun = setInterval(() => {
@@ -521,195 +551,165 @@ export default {
             }
           })
         }
-      } else {
-        this.$refs.vis3.validateField('phone', (res) => {
-          if (res) {
-            return false
-          } else {
-            this.userInfo_phone.load = true
-            msgSend({
-              cellphone: this.userInfo_phone.phone,
-              type: 5
-            }).then(() => {
-              this.userInfo_phone.load = false
-              this.code.sends = 119
-              this.code.fun = setInterval(() => {
-                if (this.code.sends > 0) {
-                  this.code.sends--
-                } else {
-                  this.code.sends = 0
-                  clearInterval(this.code.fun)
-                }
-              }, 1000)
-            }).catch(() => {
-              this.userInfo_phone.load = false
-              this.$message({
-                message: '发送验证码过于频繁.请稍后再试!',
-                type: 'error'
-              })
-            })
-          }
-        })
-      }
-    },
-    // 绑定手机号
-    onBindPhone(formName) {
-      this.$refs[formName].validate((valid) => {
-        if (valid) {
-          this.dialogLoading = true
-          cellphoneUpdate({
-            newCellphone: this.userInfo_phone.phone,
-            validCode: this.userInfo_phone.code
-          }).then(() => {
-            this.$message.success('手机号码绑定成功！')
-            this.$store.state.user.userInfo.cellphone = this.userInfo_phone.phone
-            this.userInfo = this.$store.state.user.userInfo
-            this.dialogVisible.vis3 = false
-            this.dialogLoading = false
-          }).catch(() => {
-            this.dialogLoading = false
-          })
-        }
-      })
-    },
-    closePhone() {
-      if (this.userInfo_phone.step == 1) {
-        this.$refs['vis7'].resetFields()
-      } else {
-        this.$refs['vis4'].resetFields()
-      }
-      this.userInfo_phone.step = 0
-      if (this.userInfo_phone.phone) {
-        this.userInfo_phone.phone = ''
-      }
-      if (this.userInfo_phone.code) {
-        this.userInfo_phone.code = ''
-      }
-    },
-    // 账号修改
-    confirmAccount(formName) {
-      this.$refs[formName].validate((valid) => {
-        if (valid) {
-          this.dialogLoading = true
-          accountUpdate({
-            username: this.userInfo_user.newUserName,
-            validCode: this.userInfo_user.code
-          }).then((res) => {
-            this.$message.success('账号修改成功!')
-            this.$store.commit('SET_NAME', this.userInfo_user.newUserName)
-            this.$store.state.user.userInfo.username = this.userInfo_user.newUserName
-            this.userInfo = this.$store.state.user.userInfo
-            this.dialogVisible.vis5 = false
-            this.dialogLoading = false
-          }).catch(() => {
-            this.dialogLoading = false
-          })
-        } else {
-          return false
-        }
-      })
-    },
-    // 账号修改发送短信
-    accountSendCode() {
-      this.userInfo_phone.load = true
-      msgSend({
-        cellphone: this.userInfo.cellphone,
-        type: 4
-      }).then(() => {
-        this.userInfo_phone.load = false
-        this.code.sends = 119
-        this.code.fun = setInterval(() => {
-          if (this.code.sends > 0) {
-            this.code.sends--
-          } else {
-            this.code.sends = 0
-            clearInterval(this.code.fun)
-          }
-        }, 1000)
-      }).catch(() => {
-        this.userInfo_phone.load = false
-        this.$message({
-          message: '发送验证码过于频繁.请稍后再试!',
-          type: 'error'
-        })
-      })
-    },
-    onVis4() {
-      this.dialogVisible.vis4 = true
-      this.userInfo_phone.phone = this.userInfo.cellphone
-    },
-    onSavePhone(formName) {
-      if (this.userInfo_phone.step == 0) {
+      },
+      // 绑定手机号
+      onBindPhone(formName) {
         this.$refs[formName].validate((valid) => {
           if (valid) {
-            cellphoneValid({ validCode: this.userInfo_phone.code }).then(res => {
-              if (res) {
-                this.userInfo_phone.phone = ''
-                this.userInfo_phone.code = ''
-                this.code.sends = 0
-                this.userInfo_phone.step = 1
-              }
-            }).catch(error => {
-              this.$message({
-                message: error.data.msg,
-                type: 'error'
-              })
+            this.dialogLoading = true
+            cellphoneUpdate({
+              cellphone: this.userInfo_phone.phone,
+              smsCode: this.userInfo_phone.code
+            }).then(() => {
+              this.$message.success('手机号码绑定成功！')
+              this.$store.state.user.userInfo.cellphone = this.userInfo_phone.phone
+              this.userInfo = this.$store.state.user.userInfo
+              this.dialogVisible.vis3 = false
+              this.dialogLoading = false
+            }).catch(() => {
+              this.dialogLoading = false
             })
           }
         })
-      } else if (this.userInfo_phone.step == 1) {
-        this.sendMsg('vis7')
-      }
-    },
-    sendMsg(formName) {
-      this.$refs[formName].validate((valid) => {
-        if (valid) {
-          this.dialogLoading = true
-          cellphoneUpdate({
-            newCellphone: this.userInfo_phone.phone,
-            validCode: this.userInfo_phone.code
-          }).then((res) => {
-            this.$store.state.user.userInfo.cellphone = this.userInfo_phone.phone
-            this.userInfo = this.$store.state.user.userInfo
-            this.$refs[formName].resetFields()
-            this.dialogVisible.vis4 = false
-            this.userInfo_phone.step = 0
-            this.dialogLoading = false
-          }).catch(() => {
-            this.dialogLoading = false
-            this.userInfo_phone.phone = ''
-            this.userInfo_phone.code = ''
-            this.code.sends = 0
-          })
+      },
+      closePhone() {
+        if (this.userInfo_phone.step == 1) {
+          this.$refs['vis7'].resetFields()
+        } else {
+          this.$refs['vis4'].resetFields()
         }
-      })
-    },
-    onvis5() {
-      if (!this.userInfo.cellphone) {
-        this.$message({
-          message: '请先绑定手机号码',
-          type: 'error'
+        this.userInfo_phone.step = 0
+        if (this.userInfo_phone.phone) {
+          this.userInfo_phone.phone = ''
+        }
+        if (this.userInfo_phone.code) {
+          this.userInfo_phone.code = ''
+        }
+      },
+      // 账号修改
+      confirmAccount(formName) {
+        this.$refs[formName].validate((valid) => {
+          if (valid) {
+            this.dialogLoading = true
+            accountUpdate({
+              account: this.userInfo_user.newUserName,
+              smsCode: this.userInfo_user.code
+            }).then((res) => {
+              this.$message.success('账号修改成功!')
+              this.$store.commit('SET_NAME', this.userInfo_user.newUserName)
+              this.$store.state.user.userInfo.username = this.userInfo_user.newUserName
+              this.userInfo = this.$store.state.user.userInfo
+              this.dialogVisible.vis5 = false
+              this.dialogLoading = false
+            }).catch(() => {
+              this.dialogLoading = false
+            })
+          } else {
+            return false
+          }
         })
-        return false
-      }
-      this.dialogVisible.vis5 = true
-      this.userInfo_user.userName = this.userInfo.username
-      this.userInfo_user.phone = this.userInfo.cellphone
-    },
-    handleClick(tab, events) {
+      },
+      // 账号修改发送短信
+      accountSendCode() {
+        this.userInfo_phone.load = true
+        msgSend({
+          cellphone: this.userInfo.cellphone,
+          type: 4
+        }).then(() => {
+          this.userInfo_phone.load = false
+          this.code.sends = 119
+          this.code.fun = setInterval(() => {
+            if (this.code.sends > 0) {
+              this.code.sends--
+            } else {
+              this.code.sends = 0
+              clearInterval(this.code.fun)
+            }
+          }, 1000)
+        }).catch(() => {
+          this.userInfo_phone.load = false
+          this.$message({
+            message: '发送验证码过于频繁.请稍后再试!',
+            type: 'error'
+          })
+        })
+      },
+      onVis4() {
+        this.dialogVisible.vis4 = true
+        this.userInfo_phone.phone = this.userInfo.cellphone
+      },
+      onSavePhone(formName) {
+        if (this.userInfo_phone.step == 0) {
+          this.$refs[formName].validate((valid) => {
+            if (valid) {
+              cellphoneValid({ smsCode: this.userInfo_phone.code }).then(res => {
+                if (res) {
+                  this.userInfo_phone.phone = ''
+                  this.userInfo_phone.code = ''
+                  this.code.sends = 0
+                  this.userInfo_phone.step = 1
+                }
+              }).catch(error => {
+                this.$message({
+                  message: error.data.msg,
+                  type: 'error'
+                })
+              })
+            }
+          })
+        } else if (this.userInfo_phone.step == 1) {
+          this.sendMsg('vis7')
+        }
+      },
+      sendMsg(formName) {
+        this.$refs[formName].validate((valid) => {
+          if (valid) {
+            this.dialogLoading = true
+            cellphoneUpdate({
+              cellphone: this.userInfo_phone.phone,
+              smsCode: this.userInfo_phone.code
+            }).then((res) => {
+              this.$store.state.user.userInfo.cellphone = this.userInfo_phone.phone
+              this.userInfo = this.$store.state.user.userInfo
+              this.$refs[formName].resetFields()
+              this.dialogVisible.vis4 = false
+              this.userInfo_phone.step = 0
+              this.dialogLoading = false
+            }).catch(() => {
+              this.dialogLoading = false
+              this.userInfo_phone.phone = ''
+              this.userInfo_phone.code = ''
+              this.code.sends = 0
+            })
+          }
+        })
+      },
+      onvis5() {
+        if (!this.userInfo.cellphone) {
+          this.$message({
+            message: '请先绑定手机号码',
+            type: 'error'
+          })
+          return false
+        }
+        this.dialogVisible.vis5 = true
+        this.userInfo_user.account = this.userInfo.account
+        this.userInfo_user.phone = this.userInfo.cellphone
+      },
+      handleClick(tab, events) {
 
-    },
-    ifAvatar() {
-      if (this.$store.state.user.userInfo.avatar == 1 || this.$store.state.user.userInfo.avatar == 2) {
-        this.userInfo_avatar.tabs = 'one'
-        this.userInfo_avatar.type = this.$store.state.user.userInfo.avatar
-      } else {
-        this.userInfo_avatar.tabs = 'two'
-        this.userInfo_avatar.src = this.$store.state.user.userInfo.avatar
+      },
+      ifAvatar() {
+        if (this.$store.state.user.userInfo.avatarUrl == 1 || this.$store.state.user.userInfo.avatarUrl == 2) {
+          this.userInfo_avatar.tabs = 'one'
+          this.userInfo_avatar.type = this.$store.state.user.userInfo.avatarUrl
+        } else {
+          this.userInfo_avatar.tabs = 'two'
+          this.userInfo_avatar.src = this.$store.state.user.userInfo.avatarUrl
+        }
       }
     }
   }
-}
 </script>
 
 <style scoped>

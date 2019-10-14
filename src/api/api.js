@@ -37,7 +37,7 @@ export function updateAvatar(params) {
 
 // 修改密码
 export function userPasswordUpdate(params) {
-  const url = '/self/password'
+  const url = '/self/password/set'
   return requestHelper(url, methodPut, params)
 }
 
@@ -55,19 +55,19 @@ export function getUploadKey() {
 
 // 发送验证码
 export function msgSend(params) {
-  const url = '/message/send'
+  const url = '/sms/send'
   return requestHelper(url, methodGet, params)
 }
 
-// 修改手机号码
+// 绑定手机号码
 export function cellphoneUpdate(params) {
-  const url = '/self/cellphone'
+  const url = '/self/cellphone/bind'
   return requestHelper(url, methodPut, params)
 }
 
 // 验证旧手机号码
 export function cellphoneValid(params) {
-  const url = '/self/auth'
+  const url = '/self/sms/code/verify'
   return requestHelper(url, methodGet, params)
 }
 
@@ -91,7 +91,7 @@ export function tenantLogoUpdate(params) {
 
 // 修改账号
 export function accountUpdate(params) {
-  const url = '/self/username'
+  const url = '/self/account/set'
   return requestHelper(url, methodPut, params)
 }
 

@@ -24,7 +24,7 @@ const fucMenuList = (menuArr, arr, level, prefixPath) => {
           children: [
             {
               path: 'index',
-              component: () => import(`@/views${item.path}/index`),
+              component: () => import(`@/views${item.path}${item.path}`),
               meta: { title: item.name, icon: item.icon }
             }
           ]
