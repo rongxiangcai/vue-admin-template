@@ -40,12 +40,12 @@ service.interceptors.response.use(
       if (res.code === 5 || res.code === 1 || res.code === 106 || res.code === 104 || res.code === 105) {
         if (res.code === 104 || res.code === 105) {
           setTimeout(() => {
-            store.dispatch('FedLogOut').then(() => {
+            store.dispatch('user/logout').then(() => {
               location.reload()// 为了重新实例化vue-router对象 避免bug
             })
           }, 500)
         } else {
-          store.dispatch('FedLogOut').then(() => {
+          store.dispatch('user/logout').then(() => {
             location.reload()// 为了重新实例化vue-router对象 避免bug
           })
         }
