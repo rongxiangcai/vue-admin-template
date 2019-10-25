@@ -6,7 +6,7 @@
         <img v-if="userInfo.avatarUrl == '1'" alt="" :src="require('@/assets/system/default-avatar1.jpg')">
         <img v-if="userInfo.avatarUrl == '2'" alt="" :src="require('@/assets/system/default-avatar2.jpg')">
         <img v-if="userInfo.avatarUrl !== '1' && userInfo.avatarUrl !== '2' && userInfo.avatarUrl" alt="" :src="userInfo.avatarUrl">
-        <img v-if="!userInfo.avatarUrl" :src="require('@/assets/system/avatar_default3.png')" alt="">
+        <img v-if="!userInfo.avatarUrl" :src="require('@/assets/system/default-avatar2.jpg')" alt="">
         <p><span @click="onVis1">修改头像</span></p>
       </div>
       <div class="intro">
